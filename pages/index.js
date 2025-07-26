@@ -1,7 +1,8 @@
 const Home = () => {
   return (
-    <div>
-      <h1>Me ama, da uma risadinha!!</h1>
+    <div style={{ textAlign: 'center', marginTop: '50px' }}>
+      <h1>Felipe Godoi</h1>
+      <h2>Em construção...</h2>
     </div>
   );
 };
