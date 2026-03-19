@@ -5,8 +5,6 @@ describe("GET /api/v1/status", () => {
 
     const data = await response.json();
 
-    console.log(data);
-
     const updateAt = new Date(data.update_at);
     const now = new Date();
     const diff = now.getTime() - updateAt.getTime();
