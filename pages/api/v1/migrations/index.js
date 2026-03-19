@@ -5,41 +5,50 @@ import database from "infra/database";
 export default async function migrations(req, res) {
   const { method } = req;
 
-  const client = await database.getNewClient();
+  const allowedMethods = ["POST", "GET"];
+  if (!allowedMethods.includes(method)) {
+    return res.status(405).json({ message: "Method not allowed" });
+  }
 
-  const migrationsDir = join("infra", "migrations");
-  const defaultMigrationOptions = {
-    dbClient: client,
-    dir: migrationsDir,
-    direction: "up",
-    dryRun: true,
-    verbose: true,
-    migrationsTable: "pgmigrations",
-  };
+  let dbClient;
 
-  if (method === "POST") {
-    const migrations = await migrationRunner({
-      ...defaultMigrationOptions,
-      dryRun: false,
-    });
+  try {
+    dbClient = await database.getNewClient();
 
-    await client.end();
+    const migrationsDir = join("infra", "migrations");
+    const defaultMigrationOptions = {
+      dbClient,
+      dir: migrationsDir,
+      direction: "up",
+      dryRun: true,
+      verbose: true,
+      migrationsTable: "pgmigrations",
+    };
 
-    if (migrations.length > 0) {
-      return res.status(201).json(migrations);
+    if (method === "POST") {
+      const migrations = await migrationRunner({
+        ...defaultMigrationOptions,
+        dryRun: false,
+      });
+
+      if (migrations.length > 0) {
+        res.status(201).json(migrations);
+      }
+
+      res.status(200).json(migrations);
     }
 
-    return res.status(200).json(migrations);
+    if (method === "GET") {
+      const penddingMigrations = await migrationRunner({
+        ...defaultMigrationOptions,
+      });
+
+      res.status(200).json(penddingMigrations);
+    }
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Internal server error" });
+  } finally {
+    await dbClient.end();
   }
-
-  if (method === "GET") {
-    const penddingMigrations = await migrationRunner({
-      ...defaultMigrationOptions,
-    });
-
-    await client.end();
-    return res.status(200).json(penddingMigrations);
-  }
-
-  return res.status(405).json({ message: "Method not allowed" }).end();
 }
