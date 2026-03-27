@@ -7,7 +7,7 @@ export default async function migrations(req, res) {
 
   const allowedMethods = ["POST", "GET"];
   if (!allowedMethods.includes(method)) {
-    return res.status(405).json({ message: "Method not allowed" });
+    return res.status(405).json({ error: `Method ${method} not allowed` });
   }
 
   let dbClient;
@@ -47,7 +47,7 @@ export default async function migrations(req, res) {
     }
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   } finally {
     await dbClient.end();
   }
